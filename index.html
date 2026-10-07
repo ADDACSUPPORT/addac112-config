@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADDAC112 Config</title>
+<style>
+    :root {
+        --bg: #f4f3ef;
+        --panel: #ffffff;
+        --ink: #1d1d1b;
+        --muted: #6b6a64;
+        --line: #e2e0d8;
+        --accent: #d9480f;
+        --accent-ink: #ffffff;
+        --changed: #e8590c;
+        --changed-bg: #fff4e6;
+        --note-bg: #fff9db;
+        --note-line: #f2d675;
+        --err: #c92a2a;
+        --err-bg: #fff0f0;
+        --err-line: #f1a5a5;
+        --focus: #1c7ed6;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #151514;
+            --panel: #1f1f1d;
+            --ink: #ecebe6;
+            --muted: #9a9890;
+            --line: #33332f;
+            --accent: #ff6b1a;
+            --accent-ink: #151514;
+            --changed: #ff922b;
+            --changed-bg: #2b2016;
+            --note-bg: #2a2614;
+            --note-line: #6b5d1f;
+            --err: #ff8787;
+            --err-bg: #2c1a1a;
+            --err-line: #7a3434;
+            --focus: #4dabf7;
+            color-scheme: dark;
+        }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); }
+    button, select, input { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+    code { font-family: var(--mono); font-size: .92em; }
+
+    header { border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+    .bar { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+    .brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+    .brand b { font: 700 18px var(--mono); letter-spacing: .04em; }
+    .brand span { color: var(--muted); font-size: 13px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    nav.tabs { max-width: 1100px; margin: 0 auto; padding: 0 16px; display: flex; gap: 4px; overflow-x: auto; }
+    nav.tabs button { border: 0; background: none; padding: 10px 12px; border-bottom: 2px solid transparent; cursor: pointer; color: var(--muted); font-weight: 500; white-space: nowrap; }
+    nav.tabs button[aria-selected=true] { color: var(--ink); border-bottom-color: var(--accent); }
+    nav.tabs .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--changed); margin-left: 6px; vertical-align: 2px; }
+
+    .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+    .btn:hover:not(:disabled) { border-color: var(--muted); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+    .btn.small { padding: 3px 8px; font-size: 13px; border-radius: 6px; }
+    .btn:disabled { opacity: .45; cursor: default; }
+    select, input[type=text] { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 8px; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 120px; }
+
+    .intro { max-width: 680px; }
+    .intro h1 { font-size: 22px; margin: 8px 0 6px; }
+    .intro ol { padding-left: 20px; }
+    .intro li { margin: 4px 0; }
+    .intro .warn { border-left: 3px solid var(--accent); padding: 8px 12px; background: var(--panel); border-radius: 0 8px 8px 0; }
+    .small { color: var(--muted); font-size: 13px; }
+
+    .context { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; margin-bottom: 14px; color: var(--muted); font-size: 13px; }
+    .context strong { color: var(--ink); font: 600 15px var(--mono); }
+
+    .messages { display: grid; gap: 8px; margin-bottom: 14px; }
+    .msg { border: 1px solid var(--note-line); background: var(--note-bg); border-radius: 8px; padding: 8px 12px; font-size: 14px; display: flex; gap: 10px; align-items: flex-start; }
+    .msg.err { border-color: var(--err-line); background: var(--err-bg); }
+    .msg ul { margin: 2px 0 0; padding-left: 18px; }
+    .msg button { margin-left: auto; border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; }
+
+    .lead { max-width: 760px; color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+    .toolbar select { min-width: 220px; }
+    .banner { border: 1px dashed var(--err-line); background: var(--err-bg); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    h3.group { font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr)); gap: 16px; align-items: start; }
+    section.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .card h2 { margin: 0; padding: 12px 16px; font: 600 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--line); }
+    .card h2 .tag { font: 500 11px var(--sans); letter-spacing: 0; text-transform: none; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; }
+    .card h2 .right { margin-left: auto; }
+    .card .cardnote { padding: 8px 16px; color: var(--muted); font-size: 12.5px; border-bottom: 1px solid var(--line); }
+
+    .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 6px 12px; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--line); position: relative; }
+    .row:last-child { border-bottom: 0; }
+    .row.wide { grid-template-columns: 1fr; }
+    .lbl { font: 500 12.5px var(--mono); letter-spacing: .03em; }
+    .row .help { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; margin-top: -2px; }
+    .row .help .was { color: var(--changed); }
+    .row .help .err { color: var(--err); }
+    .row.changed { background: var(--changed-bg); }
+    .row.changed::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--changed); }
+    .row.locked > :not(.help), .row.inactive > :not(.help) { opacity: .6; }
+    .row select { width: 100%; }
+
+    .range { display: flex; gap: 10px; align-items: center; }
+    .range input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+    .range input[type=number] { width: 84px; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 6px; text-align: right; }
+    .range .unit { color: var(--muted); font-size: 12px; min-width: 26px; }
+    .range .zero { font: 500 12px var(--mono); color: var(--muted); min-width: 56px; }
+    .auto { display: inline-flex; gap: 5px; align-items: center; font: 500 12px var(--mono); white-space: nowrap; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { position: relative; }
+    .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+    .chip span { display: inline-block; border: 1px solid var(--line); border-radius: 99px; padding: 3px 10px; font: 500 12px var(--mono); }
+    .chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    .chip input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+    .loops { list-style: none; margin: 0; padding: 0; }
+    .loops li { display: flex; gap: 8px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--line); }
+    .loops .pos { font: 500 12px var(--mono); color: var(--muted); width: 26px; }
+    .loops .name { font: 500 13px var(--mono); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .loops .missing { color: var(--err); font: 12px var(--sans); }
+    .loops label.sel { display: inline-flex; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); }
+    .loops .empty { color: var(--muted); font-size: 13px; }
+    .loopadd { display: flex; gap: 8px; padding: 10px 16px; flex-wrap: wrap; }
+    .loopadd select { flex: 1; min-width: 140px; }
+
+    .scale { display: grid; grid-template-columns: 28px minmax(0, 1fr) 140px; gap: 6px 10px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); position: relative; }
+    .scale:last-child { border-bottom: 0; }
+    .scale .idx { font: 600 13px var(--mono); color: var(--muted); }
+    .scale .ratios { grid-column: 2 / -1; }
+    .scale input[type=text] { width: 100%; font-family: var(--mono); font-size: 13px; }
+    .scale .cents { grid-column: 2 / -1; color: var(--muted); font: 12px var(--mono); overflow-wrap: anywhere; }
+    .scale .problem { grid-column: 2 / -1; font-size: 12.5px; }
+    .scale .problem.err { color: var(--err); }
+    .scale .problem.warn { color: var(--muted); }
+    .scale.changed { background: var(--changed-bg); }
+    .scale.changed::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--changed); }
+    .scale input.bad { border-color: var(--err); }
+
+    footer.save { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); z-index: 2; }
+    footer.save .status { margin-right: auto; color: var(--muted); font-size: 14px; min-width: 0; }
+    footer.save .status b { color: var(--changed); }
+    footer.save .status .files { display: block; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    [hidden] { display: none !important; }
+    @media (max-width: 560px) {
+        .row { grid-template-columns: 1fr; }
+        .range input[type=number] { width: 72px; }
+        .scale { grid-template-columns: 24px minmax(0, 1fr) 118px; }
+        .scale select { font-size: 13px; padding: 6px 4px; }
+        .toolbar select { min-width: 0; flex: 1 1 100%; }
+    }
+</style>
+</head>
+<body>
+<header>
+    <div class="bar">
+        <div class="brand"><b>ADDAC112</b><span>Config</span></div>
+        <div class="actions">
+            <button class="btn primary" id="open-sd" hidden>Open SD card…</button>
+            <button class="btn" id="open-folder">Open SD card folder…</button>
+            <select id="bank" aria-label="Bank" hidden></select>
+            <input type="file" id="folder-input" webkitdirectory multiple hidden>
+        </div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist" hidden></nav>
+</header>
+
+<main>
+    <div class="intro" id="intro">
+        <h1>Edit your 112's banks from a computer</h1>
+        <ol>
+            <li>Turn the 112 off and put its SD card in your computer.</li>
+            <li id="step-sd"><b>Open SD card…</b> and choose the card (or one bank folder).</li>
+            <li id="step-folder" hidden><b>Open SD card folder…</b> and choose the card (or one bank folder).</li>
+            <li>Edit the bank settings, presets, scales or the global settings, then <b id="save-word">Save</b>.</li>
+            <li>Put the card back in the 112 and load the bank.</li>
+        </ol>
+        <p class="warn">Edit with the card out of the module: the 112 rewrites its files every time the bank is saved, so changes made on the module after opening the card here would be overwritten (and vice versa).</p>
+        <p class="small" id="browser-note" hidden>This browser can't write to the card. Saving downloads the edited files, and the page tells you where to copy each one. Chrome and Edge can open and save the card directly.</p>
+        <p class="small">Everything happens in your browser: no files are uploaded anywhere.</p>
+    </div>
+
+    <div id="editor" hidden>
+        <div class="context" id="context"></div>
+        <div class="messages" id="messages" aria-live="polite"></div>
+        <div id="panel"></div>
+    </div>
+</main>
+
+<footer class="save" id="savebar" hidden>
+    <div class="bar">
+        <div class="status" id="status"></div>
+        <button class="btn" id="revert" disabled>Revert</button>
+        <button class="btn primary" id="save" disabled>Save</button>
+    </div>
+</footer>
+
+<script src="kv.js"></script>
+<script src="cfg.js"></script>
+<script src="scales.js"></script>
+<script src="source.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
