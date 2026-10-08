@@ -52,13 +52,13 @@
     code { font-family: var(--mono); font-size: .92em; }
 
     header { border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
-    .bar { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+    .bar { max-width: 1440px; margin: 0 auto; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
     .brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
     .brand b { font: 700 18px var(--mono); letter-spacing: .04em; }
     .brand span { color: var(--muted); font-size: 13px; }
     .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-    nav.tabs { max-width: 1100px; margin: 0 auto; padding: 0 16px; display: flex; gap: 4px; overflow-x: auto; }
+    nav.tabs { max-width: 1440px; margin: 0 auto; padding: 0 16px; display: flex; gap: 4px; overflow-x: auto; }
     nav.tabs button { border: 0; background: none; padding: 10px 12px; border-bottom: 2px solid transparent; cursor: pointer; color: var(--muted); font-weight: 500; white-space: nowrap; }
     nav.tabs button[aria-selected=true] { color: var(--ink); border-bottom-color: var(--accent); }
     nav.tabs .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--changed); margin-left: 6px; vertical-align: 2px; }
@@ -70,7 +70,7 @@
     .btn:disabled { opacity: .45; cursor: default; }
     select, input[type=text] { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 8px; }
 
-    main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 120px; }
+    main { max-width: 1440px; margin: 0 auto; padding: 20px 16px 120px; }
 
     .intro { max-width: 680px; }
     .intro h1 { font-size: 22px; margin: 8px 0 6px; }
@@ -94,7 +94,9 @@
     .banner { border: 1px dashed var(--err-line); background: var(--err-bg); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     h3.group { font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr)); gap: 16px; align-items: start; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    @media (max-width: 1180px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
     section.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
     .card h2 { margin: 0; padding: 12px 16px; font: 600 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--line); }
     .card h2 .tag { font: 500 11px var(--sans); letter-spacing: 0; text-transform: none; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; }
@@ -105,6 +107,14 @@
     .row:last-child { border-bottom: 0; }
     .row.wide { grid-template-columns: 1fr; }
     .lbl { font: 500 12.5px var(--mono); letter-spacing: .03em; }
+    .lblwrap { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .info { flex: none; position: relative; width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 1px solid var(--muted); background: none; color: var(--muted); font: italic 700 11px/16px Georgia, "Times New Roman", serif; cursor: pointer; }
+    .info::after { content: ""; position: absolute; inset: -8px; } /* bigger touch target */
+    .info:hover { border-color: var(--ink); color: var(--ink); }
+    .info[aria-expanded=true] { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+    .card h2 .info { font-size: 11px; letter-spacing: 0; text-transform: none; }
+    .desc { grid-column: 1 / -1; background: var(--bg); border-radius: 6px; padding: 8px 10px; font-size: 13px; line-height: 1.45; color: var(--ink); }
+    .cardnote .desc { background: none; padding: 0; color: var(--muted); }
     .row .help { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; margin-top: -2px; }
     .row .help .was { color: var(--changed); }
     .row .help .err { color: var(--err); }
@@ -115,7 +125,7 @@
 
     .range { display: flex; gap: 10px; align-items: center; }
     .range input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
-    .range input[type=number] { width: 84px; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 6px; text-align: right; }
+    .range input[type=number] { width: 74px; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 6px; text-align: right; }
     .range .unit { color: var(--muted); font-size: 12px; min-width: 26px; }
     .range .zero { font: 500 12px var(--mono); color: var(--muted); min-width: 56px; }
     .auto { display: inline-flex; gap: 5px; align-items: center; font: 500 12px var(--mono); white-space: nowrap; }
@@ -141,6 +151,8 @@
     .scale:last-child { border-bottom: 0; }
     .scale .idx { font: 600 13px var(--mono); color: var(--muted); }
     .scale .ratios { grid-column: 2 / -1; }
+    .scalehead { padding-top: 6px; padding-bottom: 6px; }
+    .scalehead .lbl { color: var(--muted); font-size: 11.5px; }
     .scale input[type=text] { width: 100%; font-family: var(--mono); font-size: 13px; }
     .scale .cents { grid-column: 2 / -1; color: var(--muted); font: 12px var(--mono); overflow-wrap: anywhere; }
     .scale .problem { grid-column: 2 / -1; font-size: 12.5px; }
@@ -213,6 +225,7 @@
 <script src="cfg.js"></script>
 <script src="scales.js"></script>
 <script src="source.js"></script>
+<script src="help.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

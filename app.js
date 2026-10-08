@@ -3,6 +3,7 @@
 const { SECTIONS, PRESET_SECTIONS, OPTION_SECTIONS, FIELDS, VOL_BITS, GAIN_MAX, Settings, Preset, GlobalCfg, optionLabel, enumMatch } = window.Cfg112;
 const { ScalesFile, SETS, NAME_MAX, formatRatio, parseRatio, cents } = window.Scales112;
 const { FolderSource, FilesSource, isBankName } = window.Source112;
+const HELP = window.Help112;
 
 const MAX_PRESETS = 32; // MAX_PRESETS in defs.h
 const TABS = [
@@ -17,6 +18,7 @@ let S = null;          // the open bank, see loadBank()
 let tab = 'settings';
 let presetSel = null;  // id of the preset shown
 let scaleDrafts = {};  // ratio text that doesn't parse yet: "set:index" -> text
+const openInfo = new Set(); // help keys whose description is shown
 
 const $ = (id) => document.getElementById(id);
 function el(tag, props, ...kids) {
@@ -93,6 +95,20 @@ function showError(title, e) {
 
 // ---------- generic fields ----------
 const fid = (key) => `f-${key.replace('@', '_')}`;
+
+// (i) button that shows / hides HELP[key]; place infoText(key) where the text should appear
+const infoId = (key) => `info-${key.replace('@', '_')}`;
+function infoButton(key, label) {
+    if (!HELP[key]) return null;
+    const open = openInfo.has(key);
+    const b = el('button', { type: 'button', class: 'info', id: `${infoId(key)}-btn`, text: 'i', 'aria-label': `About ${label}`, 'aria-expanded': String(open), 'aria-controls': infoId(key) });
+    b.onclick = () => { if (open) openInfo.delete(key); else openInfo.add(key); render(); };
+    return b;
+}
+function infoText(key) {
+    return HELP[key] && openInfo.has(key) ? el('div', { class: 'desc', id: infoId(key), text: HELP[key] }) : null;
+}
+const labelWith = (key, label, labelEl) => el('div', { class: 'lblwrap' }, labelEl, infoButton(key, label));
 const semitones = (r) => 12 * Math.log2(r);
 
 function fieldChanged(f, cur, orig) {
@@ -139,7 +155,7 @@ function rangeControl(f, v, max, onChange, origValue) {
     num.onchange = () => { if (num.value !== '') onChange(Number(num.value) / k); else render(); };
     const wrap = el('div', { class: 'range' }, slider, num);
     const unit = f.percent ? '%' : f.unit;
-    if (unit) wrap.append(el('span', { class: 'unit', text: unit }));
+    wrap.append(el('span', { class: 'unit', text: unit || '' })); // empty keeps the number boxes aligned
     if (f.zeroLabel) wrap.append(el('span', { class: 'zero', text: v === 0 ? f.zeroLabel : '' }));
     if (f.auto !== undefined) {
         const cb = el('input', { type: 'checkbox', checked: isAuto });
@@ -184,13 +200,12 @@ function renderSections(sections, rec, orig, ctx = {}) {
             else if (f.type === 'pitch') control = pitchControl(f, v, onChange(f.key));
             else control = rangeControl(f, v, rec.max(f.key), onChange(f.key), orig ? orig.get(f.key) : undefined);
             const row = el('div', { class: 'row' + (f.type === 'bits' && f.bits.length > 5 ? ' wide' : '') + (changed ? ' changed' : '') + (locks[f.key] ? ' locked' : '') + (inactive ? ' inactive' : '') },
-                el(f.type === 'bits' ? 'div' : 'label', { class: 'lbl', id: `${fid(f.key)}-label`, for: f.type === 'bits' ? null : fid(f.key), text: f.label }),
-                control);
+                labelWith(f.key, f.label, el(f.type === 'bits' ? 'div' : 'label', { class: 'lbl', id: `${fid(f.key)}-label`, for: f.type === 'bits' ? null : fid(f.key), text: f.label })),
+                control, infoText(f.key));
             const notes = [];
             if (locks[f.key]) notes.push(el('span', { text: locks[f.key] }));
             if (inactive) notes.push(el('span', { text: inactive }));
             if (changed) notes.push(el('span', { class: 'was', text: `was ${valueLabel(f, orig.get(f.key))}` }));
-            if (f.help) notes.push(el('span', { text: f.help }));
             if (notes.length) row.append(el('div', { class: 'help' }, notes.flatMap((n, i) => (i ? [' · ', n] : [n]))));
             card.append(row);
         }
@@ -296,8 +311,8 @@ function renderLoops(p) {
     const addAll = el('button', { class: 'btn small', text: 'Add all', disabled: !available.length });
     addAll.onclick = () => set(list.concat(available.map((w) => w.id)), selIdx);
     return el('section', { class: 'card', id: 'card-loops' },
-        el('h2', null, 'Loops', changed ? el('span', { class: 'tag', text: 'edited' }) : null),
-        el('div', { class: 'cardnote', text: 'The loops this preset uses, in LOOP SELECT order. "start" is the loop selected when the preset loads.' }),
+        el('h2', null, 'Loops', infoButton('loops', 'Loops'), changed ? el('span', { class: 'tag', text: 'edited' }) : null),
+        openInfo.has('loops') ? el('div', { class: 'cardnote' }, infoText('loops')) : null,
         ul, el('div', { class: 'loopadd' }, addSel, add, addAll));
 }
 
@@ -317,7 +332,12 @@ function renderScales(host) {
             render();
         };
         const card = el('section', { class: 'card', id: `scales-${set.id}` },
-            el('h2', null, set.label, (used === 1) === (set.id === 'custom') ? el('span', { class: 'tag', text: 'used by bank settings' }) : null, reset));
+            el('h2', null, set.label, (used === 1) === (set.id === 'custom') ? el('span', { class: 'tag', text: 'used by bank settings' }) : null, reset),
+            el('div', { class: 'scale scalehead' }, el('span'),
+                labelWith('scale_name', 'scale names', el('span', { class: 'lbl', text: 'NAME' })),
+                labelWith('scale_per_octave', 'per octave', el('span', { class: 'lbl', text: 'OCTAVES' })),
+                el('div', { class: 'ratios' }, labelWith('scale_ratios', 'ratios', el('span', { class: 'lbl', text: 'RATIOS' }))),
+                ['scale_name', 'scale_per_octave', 'scale_ratios'].map(infoText)));
         S.scales.cur.sets[set.id].forEach((sc, i) => {
             const key = `${set.id}:${i}`;
             const o = S.scales.orig.sets[set.id][i];
@@ -363,8 +383,9 @@ function gainControl(key, label) {
     num.onchange = () => set(num.value === '' ? 0 : Math.pow(10, Number(num.value) / 20));
     const changed = g !== o;
     const row = el('div', { class: 'row' + (changed ? ' changed' : '') },
-        el('label', { class: 'lbl', for: `gain-${key}`, text: label }),
-        el('div', { class: 'range' }, slider, num, el('span', { class: 'unit', text: `dB ×${g.toFixed(3)}` })));
+        labelWith(key, label, el('label', { class: 'lbl', for: `gain-${key}`, text: label })),
+        el('div', { class: 'range' }, slider, num, el('span', { class: 'unit', text: `dB ×${g.toFixed(3)}` })),
+        infoText(key));
     if (changed) row.append(el('div', { class: 'help' }, el('span', { class: 'was', text: `was ${o > 0 ? db(o).toFixed(1) + ' dB' : 'muted'}` })));
     return row;
 }
@@ -377,8 +398,9 @@ function renderCard(host) {
     for (const b of banks) sel.append(el('option', { value: b, text: isBankName(b) ? b : `${b} (the module only loads BANK<number> folders)`, disabled: !isBankName(b), selected: b === g.bank }));
     sel.onchange = () => { g.bank = sel.value; render(); };
     const bankChanged = g.bank !== S.global.orig.bank;
-    const bankRow = el('div', { class: 'row' + (bankChanged ? ' changed' : '') }, el('label', { class: 'lbl', for: 'global-bank', text: 'BANK AT START' }), sel,
-        el('div', { class: 'help' }, el('span', { text: 'The bank the 112 loads when it starts.' }), bankChanged ? [' · ', el('span', { class: 'was', text: `was ${S.global.orig.bank || '(none)'}` })] : null));
+    const bankRow = el('div', { class: 'row' + (bankChanged ? ' changed' : '') }, labelWith('bank_at_start', 'bank at start', el('label', { class: 'lbl', for: 'global-bank', text: 'BANK AT START' })), sel,
+        infoText('bank_at_start'),
+        bankChanged ? el('div', { class: 'help' }, el('span', { class: 'was', text: `was ${S.global.orig.bank || '(none)'}` })) : null);
     host.append(el('div', { class: 'grid' },
         el('section', { class: 'card' }, el('h2', null, 'Startup'), bankRow),
         el('section', { class: 'card' }, el('h2', null, 'Outputs'), gainControl('out_gain_l', 'OUT GAIN LEFT'), gainControl('out_gain_r', 'OUT GAIN RIGHT'))));

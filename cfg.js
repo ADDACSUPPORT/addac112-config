@@ -104,8 +104,8 @@
         },
         {
             id: 'presets', title: 'Presets', bankWide: true, fields: [
-                { key: 'vols_in_presets', label: 'VOLS IN PRESETS', type: 'bits', bits: [[0, 'DRY'], [1, 'LOOP'], [2, 'GRAINS'], [3, 'OVERDUB'], [4, 'FEEDBACK']], def: 0, fmt: 'int', help: 'Checked volumes are recalled by presets; the others always follow their knob.' },
-                { key: 'preset_override', label: 'PRESETS OVERRIDE', type: 'bits', bits: OVERRIDE_POTS, def: 0, fmt: 'int', help: 'Checked controls follow the knob/CV right after a preset change instead of waiting until the preset value is crossed.' },
+                { key: 'vols_in_presets', label: 'VOLS IN PRESETS', type: 'bits', bits: [[0, 'DRY'], [1, 'LOOP'], [2, 'GRAINS'], [3, 'OVERDUB'], [4, 'FEEDBACK']], def: 0, fmt: 'int' },
+                { key: 'preset_override', label: 'PRESETS OVERRIDE', type: 'bits', bits: OVERRIDE_POTS, def: 0, fmt: 'int' },
             ],
         },
         {
@@ -143,10 +143,10 @@
                 knob('pos_dev', 'POSITION DEV', 0),
                 Object.assign(knob('length', 'SIZE', 0.5)),
                 knob('length_dev', 'SIZE DEV', 0),
-                { key: 'delay', label: 'DELAY', type: 'range', min: 0, max: 30000, step: 1, unit: 'ms', def: 0, fmt: 'int', help: 'Capped by MAX GRAIN DELAY.' },
+                { key: 'delay', label: 'DELAY', type: 'range', min: 0, max: 30000, step: 1, unit: 'ms', def: 0, fmt: 'int' },
                 knob('delay_dev', 'DELAY DEV', 0),
                 { key: 'n_grains', label: 'N GRAINS', type: 'range', min: 0, max: 78, step: 1, def: 0, fmt: 'int' },
-                knob('direction', 'DIRECTION', 1, { help: '0% reverse, 100% forward.' }),
+                knob('direction', 'DIRECTION', 1),
                 { key: 'repeat_mode', label: 'REPEAT MODE', type: 'enum', options: opts([[0, 'PROBABILITY'], [1, 'N TIMES']]), def: 0, fmt: 'int' },
                 knob('repeats', 'REPEAT', 0),
                 knob('attack', 'ATTACK', 1),
