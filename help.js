@@ -8,7 +8,7 @@
         // ---- rec settings ----
         stereo: 'Record in mono or stereo.',
         samplerate: 'Samplerate of the module. Lower rates allow more grains and longer loops (and sound grittier); higher rates use more CPU and allow fewer grains.',
-        bit_depth: 'Bit depth of new recordings: 8, 16 or 24 bits. Lower depths use less memory.',
+        bit_depth: 'Bit depth of new recordings: 8, 16 or 24 bits.',
         antialiasing: 'Anti-aliasing filter on playback. Turn it off to save CPU, at the cost of more aliasing when pitching up.',
         overdub_origin: 'Where overdubs are written: at the play head, at the rec head, or both.',
         resampling_pitch: 'While recording over a playing loop: FIXED AT 0 records at the original pitch; FOLLOWS LOOP records at the same pitch the loop is playing at.',
