@@ -95,6 +95,14 @@
             ],
         },
         {
+            id: 'reverb', title: 'Reverb', fields: [
+                { key: 'reverb_on', label: 'REVERB', type: 'enum', options: ON_OFF, def: 0, fmt: 'int' },
+                { key: 'reverb_loop', label: 'REV LOOP', type: 'enum', options: ON_OFF, def: 1, fmt: 'int' },
+                { key: 'reverb_grains', label: 'REV GRAINS', type: 'enum', options: ON_OFF, def: 1, fmt: 'int' },
+                { key: 'reverb_dry', label: 'REV DRY', type: 'enum', options: ON_OFF, def: 0, fmt: 'int' },
+            ],
+        },
+        {
             id: 'motor', title: 'Pitch motor', fields: [
                 { key: 'pitch_motor_mode', label: 'PITCH MOTOR', type: 'enum', options: opts([[0, 'OFF'], [1, 'LOOP ONLY'], [2, 'GRAINS ONLY'], [3, 'LOOP AND GRAINS']]), def: 0, fmt: 'int' },
                 { key: 'pitch_motor_acceleration', label: 'ACCEL UP', type: 'range', min: 0, max: 100, step: 1, def: 20, fmt: 'int' },
@@ -167,6 +175,7 @@
         {
             id: 'p-rec', title: 'Rec', fields: [
                 knob('rec_prob', 'REC PROB', 1),
+                knob('reverb_amount', 'REVERB', 0.35),
                 knob('rec_delay', 'REC DELAY', 0),
                 knob('rec_delay_dev', 'REC DELAY DEV', 0),
                 { key: 'rec_mode', label: 'AFTER REC', type: 'enum', options: opts([[0, 'REC'], [1, 'PLAY'], [2, 'STOP']]), def: 0, fmt: 'int' },
@@ -292,6 +301,8 @@
             }
             if (key === 'time_grid_divisions' && value > 0 && v.clocked_mode) { v.clocked_mode = 0; notes.push('CLOCKED MODE turned OFF (not available with TIME GRID)'); }
             if (key === 'pitch_motor_mode') notes.push(...applyPitchMotor(v));
+            // same as Granular::set_reverb(): turning REVERB on or off sets REC PROB to 100%
+            if (key === 'reverb_on' && v.rec_prob !== undefined && v.rec_prob !== 1) { v.rec_prob = 1; notes.push('REC PROB set to 100% (REVERB ' + (value ? 'ON' : 'OFF') + ')'); }
             notes.push(...this.applyLimits());
             return notes;
         }

@@ -1,0 +1,73 @@
+{
+  "firmware": {
+    "id": "ADDAC112",
+    "file": "ADDAC112_V2.1.5-10-ge37e.bin",
+    "label": "ADDAC112 granular",
+    "version": "V2.1.5-10-ge37e",
+    "size": 348004
+  },
+  "engines": [
+    {
+      "id": "CDSKIPPER",
+      "file": "CDSKIPPER_7167.bin",
+      "label": "CD SKIP",
+      "version": "7167",
+      "size": 382460,
+      "manual": "README_cdskip.pdf"
+    },
+    {
+      "id": "FRIPPER",
+      "file": "FRIPPER_e225.bin",
+      "label": "FRIPPER",
+      "version": "e225",
+      "size": 382700,
+      "manual": "README_fripper.pdf"
+    },
+    {
+      "id": "LOOPS",
+      "file": "LOOPS_ed67.bin",
+      "label": "LOOPS",
+      "version": "ed67",
+      "size": 433116,
+      "manual": "README_loops.pdf"
+    },
+    {
+      "id": "NULLSTATION",
+      "file": "NULLSTATION_1015.bin",
+      "label": "NULLSTATION",
+      "version": "1015",
+      "size": 449120,
+      "manual": "README_nullstation.pdf"
+    }
+  ],
+  "banks": [
+    {
+      "folder": "BANK0_LOOPS",
+      "engine": "LOOPS",
+      "label": "LOOPS factory presets",
+      "files": [
+        "1.CFG",
+        "2.CFG",
+        "3.CFG",
+        "4.CFG",
+        "5.CFG",
+        "6.CFG",
+        "7.CFG",
+        "8.CFG",
+        "9.CFG",
+        "10.CFG",
+        "11.CFG",
+        "12.CFG",
+        "13.CFG",
+        "14.CFG",
+        "15.CFG",
+        "16.CFG",
+        "NAMES.txt",
+        "SCALES.CFG"
+      ],
+      "dirs": [
+        "WAV"
+      ]
+    }
+  ]
+}

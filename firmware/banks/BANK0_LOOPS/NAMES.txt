@@ -1,0 +1,20 @@
+Loops factory presets (from the plugin). Preset number: name, and the switches it wants.
+
+ 1.CFG  Three layers            
+ 2.CFG  Slow pad                
+ 3.CFG  Tape drift              
+ 4.CFG  Glass sparkle            ECHO SYNC: FREE = the plugin's 1/8 d at 120 BPM (/8 for the loop's eighths).
+ 5.CFG  Hum the root            
+ 6.CFG  Pocket field recorder   
+ 7.CFG  Oval skips              
+ 8.CFG  Systemisch hum          
+ 9.CFG  Laser creep             
+10.CFG  Odd speakers            
+11.CFG  Wandering regions       
+12.CFG  Endless replace          AUTO: MID (2 BARS).
+13.CFG  Fixed fate, bar by bar   FATE: FIXED. AUTO: MID (1 BAR).
+14.CFG  Scattered voices        
+15.CFG  Dense                   
+16.CFG  Dice speeds              AUTO: MID (1 BAR).
+
+The switches not named: FATE RANDOM, AUTO OFF, ECHO SYNC FREE. LAYER chooses which layer the knobs edit.

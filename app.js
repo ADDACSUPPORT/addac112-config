@@ -4,6 +4,7 @@ const { SECTIONS, PRESET_SECTIONS, OPTION_SECTIONS, FIELDS, VOL_BITS, GAIN_MAX, 
 const { ScalesFile, SETS, NAME_MAX, formatRatio, parseRatio, cents } = window.Scales112;
 const { FolderSource, FilesSource, isBankName } = window.Source112;
 const HELP = window.Help112;
+const { planInstall, readCard, runInstall, emptyCard, bankNumber, ENGINES } = window.Install112;
 
 const MAX_PRESETS = 32; // MAX_PRESETS in defs.h
 const TABS = [
@@ -89,6 +90,7 @@ function showMessage(title, items = [], kind = '') {
     $('messages').prepend(box);
 }
 function showError(title, e) {
+    $('installer').hidden = true;
     $('editor').hidden = false;
     showMessage(title, [e && e.message ? e.message : String(e)], 'err');
 }
@@ -474,6 +476,7 @@ async function loadBank(name) {
         if (adjusted.length) showMessage('Some values in the files are outside what the module accepts and are shown as the module will use them:', adjusted);
         if (S.settings.missing) showMessage('This bank has no SETTINGS.CFG yet: the bank settings are the module defaults, and saving creates the file.');
         $('intro').hidden = true;
+        $('installer').hidden = true;
         $('editor').hidden = false;
         $('savebar').hidden = false;
         renderContext();
@@ -498,6 +501,153 @@ async function openSource(s) {
     sel.value = first;
     await loadBank(first);
 }
+
+// ---------- firmware install ----------
+// A view of its own: a blank card has no banks to edit, and the edits of an open bank are kept.
+const inst = { manifest: null, dir: null, card: null, engines: false, loopsBank: true, busy: false, progress: null, done: '', error: '' };
+
+function showInstaller(on) {
+    $('installer').hidden = !on;
+    $('intro').hidden = on || !!S;
+    $('editor').hidden = on || !S;
+    $('savebar').hidden = on || !S;
+    $('tabs').hidden = on || !S;
+    window.scrollTo(0, 0);
+}
+
+async function openInstaller() {
+    showInstaller(true);
+    if (!inst.manifest) {
+        try {
+            const r = await fetch('firmware/firmware.json', { cache: 'no-cache' });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            inst.manifest = await r.json();
+        } catch (e) {
+            inst.error = `The list of firmware files couldn't be loaded (${e.message}). Open the panel from https://addacsupport.github.io/addac112-config/ and check the internet connection.`;
+        }
+    }
+    renderInstaller();
+}
+
+async function fetchFile(url) {
+    const r = await fetch(url, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+    return r.arrayBuffer();
+}
+
+const actPath = (a) => (a.dir ? `${a.dir}/${a.name}` : a.name);
+function actionItems(acts) {
+    const out = [];
+    for (const a of acts) {
+        const banks = acts.filter((b) => b.op === 'mkdir' && !b.dir).map((b) => b.name);
+        if (a.dir && banks.includes(a.dir.split('/')[0])) continue; // shown with its bank folder
+        const line = (cls, verb, why) => out.push(el('li', { class: cls }, el('span', { class: 'verb', text: verb }), actPath(a), why ? el('span', { class: 'why', text: ` (${why})` }) : null));
+        if (a.op === 'delete') line('del', 'Remove', a.why);
+        else if (a.op === 'skip') line('skip', 'Keep', a.why);
+        else if (a.op === 'mkdir') line('', 'Add', `${acts.filter((b) => b.op === 'write' && b.dir === a.name).length} files`);
+        else line('', 'Copy', a.dir ? '' : 'flashed the next time the 112 is powered on');
+    }
+    return out;
+}
+
+function renderInstaller() {
+    const host = $('installer');
+    host.textContent = '';
+    const close = el('button', { class: 'btn', text: S ? 'Back to the bank' : 'Close', onclick: () => showInstaller(false) });
+    host.append(el('div', { class: 'toolbar' }, el('h1', { text: 'Install firmware' }), el('span', { style: 'margin-left:auto' }), close));
+    if (inst.error) host.append(el('div', { class: 'msg err' }, el('div', { text: inst.error }), el('button', { 'aria-label': 'Dismiss', text: '×', onclick: () => { inst.error = ''; renderInstaller(); } })));
+    const m = inst.manifest;
+    if (!m) return;
+    const fw = m.firmware;
+    const acts = planInstall(m, inst.card || emptyCard(), { engines: inst.engines, loopsBank: inst.loopsBank });
+    const canWrite = 'showDirectoryPicker' in window;
+
+    host.append(el('p', { class: 'lead' }, 'Copies the firmware to the SD card. The 112 flashes it the next time it\'s powered on with the card in (the screen shows ', el('b', { text: 'Updating firmware' }), '). Your banks, presets and recordings are not changed.'));
+
+    const check = (checked, disabled, onchange, title, note) => el('label', { class: 'check' },
+        el('input', { type: 'checkbox', checked, disabled: disabled || inst.busy, onchange }),
+        el('span', null, el('b', { text: title }), note ? el('span', { class: 'small' }, note) : null));
+    const manual = (e) => e.manual ? [' · ', el('a', { href: `firmware/${e.manual}`, target: '_blank', rel: 'noopener', text: 'manual' })] : [];
+    const bank = m.banks[0];
+    host.append(el('section', { class: 'card' },
+        el('h2', null, 'Firmware'),
+        el('div', { class: 'row wide' }, el('div', null, el('b', { text: fw.label }), ' ', el('code', { text: fw.version }))),
+        m.engines.length ? el('div', { class: 'row wide' },
+            check(inst.engines, false, (e) => { inst.engines = e.target.checked; inst.done = ''; renderInstaller(); }, 'Also install the engines',
+                [`Copied to the ${ENGINES} folder of the card. Switch between them in Menu → ENGINE. The granular firmware is copied there too, so you can switch back to it.`,
+                    el('ul', { class: 'engine-list' }, m.engines.map((e) => el('li', null, el('b', { text: e.label }), ' ', el('code', { text: e.version }), ...manual(e))))])) : null,
+        bank ? el('div', { class: 'row wide' },
+            check(inst.engines && inst.loopsBank, !inst.engines, (e) => { inst.loopsBank = e.target.checked; inst.done = ''; renderInstaller(); }, `${bank.label} (${bank.folder})`,
+                `A bank with the ${bank.engine} engine's factory presets, as bank ${bankNumber(bank.folder)}. Not added if the card already has a bank ${bankNumber(bank.folder)}.`)) : null));
+
+    if (!canWrite) {
+        // no File System Access API: download the files and copy them by hand
+        const link = (a) => el('li', null, el('a', { href: a.url, download: a.name, text: a.name }));
+        const groups = [['the card root', acts.filter((a) => a.op === 'write' && !a.dir)], [`the ${ENGINES} folder`, acts.filter((a) => a.op === 'write' && a.dir === ENGINES)]];
+        for (const b of acts.filter((a) => a.op === 'mkdir' && !a.dir)) groups.push([`a new ${b.name} folder (with an empty WAV folder inside)`, acts.filter((a) => a.op === 'write' && a.dir === b.name)]);
+        host.append(el('section', { class: 'card' }, el('h2', null, 'Download'),
+            el('div', { class: 'cardnote' }, 'This browser can\'t write to the card (Chrome and Edge can). Download these files and copy them to the card. Delete any other .bin file in the card root first (the 112 flashes the first one it finds)' + (inst.engines ? `, and older builds of the same engines in ${ENGINES}.` : '.')),
+            groups.filter(([, list]) => list.length).map(([where, list]) => el('div', { class: 'row wide' }, el('div', null, el('b', { text: `Copy to ${where}:` }), el('ul', { class: 'engine-list' }, list.map(link)))))));
+        return;
+    }
+
+    const pick = el('button', { class: inst.dir ? 'btn' : 'btn primary', disabled: inst.busy, text: inst.dir ? 'Choose another card…' : 'Choose SD card…', onclick: pickInstallCard });
+    const todo = acts.filter((a) => a.op !== 'skip').length;
+    const go = el('button', { class: 'btn primary', disabled: !inst.dir || inst.busy || !todo, text: 'Install', onclick: () => install(acts) });
+    const p = inst.progress;
+    host.append(el('section', { class: 'card' },
+        el('h2', null, 'SD card', inst.dir ? el('span', { class: 'tag', text: inst.dir.name }) : null),
+        el('div', { class: 'cardnote' }, inst.dir ? (todo ? 'What Install will do on this card:' : 'Everything is already on this card.') : 'Put the 112\'s SD card in the computer and choose it (the card itself, not a folder in it). This is what will be copied:'),
+        el('ul', { class: 'acts' }, actionItems(acts)),
+        p ? el('div', { class: 'row wide progress' }, el('progress', { max: p.total || 1, value: p.done }), el('span', { class: 'small', text: p.text })) : null,
+        el('div', { class: 'row wide' }, el('div', { class: 'toolbar', style: 'margin:0' }, pick, inst.dir ? go : null))));
+    if (inst.done) host.append(el('div', { class: 'msg' }, el('div', null, inst.done)));
+}
+
+async function pickInstallCard() {
+    let dir;
+    try { dir = await window.showDirectoryPicker({ id: 'addac112-sd', mode: 'readwrite' }); } catch (e) {
+        if (e.name !== 'AbortError') { inst.error = `Could not open the folder: ${e.message}`; renderInstaller(); }
+        return;
+    }
+    const up = dir.name.toUpperCase();
+    if (up === ENGINES || up === 'WAV' || up === 'DELETED' || bankNumber(dir.name) !== null) {
+        inst.error = `${dir.name} is a folder on the card: choose the card itself.`;
+        renderInstaller();
+        return;
+    }
+    try {
+        inst.card = await readCard(dir);
+        inst.dir = dir;
+        inst.error = inst.done = '';
+        inst.progress = null;
+    } catch (e) {
+        inst.error = `Could not read the card: ${e.message}`;
+    }
+    renderInstaller();
+}
+
+async function install(acts) {
+    inst.busy = true;
+    inst.error = inst.done = '';
+    renderInstaller();
+    try {
+        await runInstall(inst.dir, acts, fetchFile, (done, total, a) => {
+            inst.progress = { done, total, text: a ? `${a.op === 'delete' ? 'Removing' : 'Copying'} ${actPath(a)}…` : 'Done' };
+            renderInstaller();
+        });
+        inst.card = await readCard(inst.dir);
+        inst.done = ['Installed. Eject the card safely, put it in the 112 and power it on: it shows ', el('b', { text: 'Updating firmware' }), ' and restarts with the new firmware.',
+            inst.engines ? ` The engines are in Menu → ENGINE.` : ''];
+    } catch (e) {
+        inst.error = `The install stopped: ${e.message}. The firmware in the card root is copied last, so the 112 won't update from a half-copied card. Fix the problem and click Install again.`;
+    }
+    inst.busy = false;
+    renderInstaller();
+}
+
+$('open-install').onclick = openInstaller;
+if (location.hash === '#install') openInstaller(); // link straight to the installer
 
 $('open-sd').onclick = async () => {
     if (!confirmDiscard()) return;

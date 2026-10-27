@@ -20,6 +20,17 @@ In other browsers (Firefox, Safari), the panel opens the card folder for reading
 
 Keep the card out of the module while you edit, because the 112 rewrites these files whenever it saves a bank.
 
+## Install or update the firmware
+
+**https://addacsupport.github.io/addac112-config/#install**
+
+1. Turn the 112 off and put its SD card in your computer.
+2. Open the link above in **Chrome** or **Edge**. Tick **Also install the engines** if you want the alternative engines (CD SKIP, FRIPPER, LOOPS, NULLSTATION) in Menu → ENGINE.
+3. Click **Choose SD card…**, choose the card, then **Install**.
+4. Eject the card, put it in the 112 and power it on. It shows *Updating firmware* and restarts with the new firmware.
+
+In other browsers, the page gives you the files to download and tells you where to copy each one.
+
 Everything runs in your browser. No files are uploaded anywhere.
 
 ---
