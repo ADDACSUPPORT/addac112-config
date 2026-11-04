@@ -1,42 +1,42 @@
 {
   "firmware": {
     "id": "ADDAC112",
-    "file": "ADDAC112_V2.1.5-10-ge37e.bin",
+    "file": "ADDAC112_V2.1.5-16-g9c65.bin",
     "label": "ADDAC112 granular",
-    "version": "V2.1.5-10-ge37e",
-    "size": 348004
+    "version": "V2.1.5-16-g9c65",
+    "size": 296092
   },
   "engines": [
     {
       "id": "CDSKIPPER",
-      "file": "CDSKIPPER_16e4.bin",
+      "file": "CDSKIPPER_21b3.bin",
       "label": "CD SKIP",
-      "version": "16e4",
-      "size": 382708,
+      "version": "21b3",
+      "size": 331652,
       "manual": "README_cdskip.pdf"
     },
     {
       "id": "FRIPPER",
-      "file": "FRIPPER_1da8.bin",
+      "file": "FRIPPER_dba2.bin",
       "label": "FRIPPER",
-      "version": "1da8",
-      "size": 382932,
+      "version": "dba2",
+      "size": 330716,
       "manual": "README_fripper.pdf"
     },
     {
       "id": "LOOPS",
-      "file": "LOOPS_4a81.bin",
+      "file": "LOOPS_d1f1.bin",
       "label": "LOOPS",
-      "version": "4a81",
-      "size": 387152,
+      "version": "d1f1",
+      "size": 387184,
       "manual": "README_loops.pdf"
     },
     {
       "id": "NULLSTATION",
-      "file": "NULLSTATION_1f76.bin",
+      "file": "NULLSTATION_4e62.bin",
       "label": "NULLSTATION",
-      "version": "1f76",
-      "size": 449368,
+      "version": "4e62",
+      "size": 396780,
       "manual": "README_nullstation.pdf"
     }
   ],
