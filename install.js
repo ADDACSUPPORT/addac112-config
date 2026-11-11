@@ -37,7 +37,7 @@
                 if (isBin(e.name) && ids.has(engineId(e.name)) && !wanted.some((f) => same(f.file, e.name)))
                     acts.push({ op: 'delete', dir: ENGINES, name: e.name, why: 'older build' });
             }
-            for (const f of wanted) writeOnce(ENGINES, card.engines, f, BASE + f.file);
+            for (const f of wanted) writeOnce(ENGINES, card.engines, f, f.url || BASE + f.file);
         }
 
         if (opts.engines && opts.loopsBank) {
@@ -54,8 +54,31 @@
         for (const f of card.rootFiles) {
             if (isBin(f.name) && !same(f.name, fw.file)) acts.push({ op: 'delete', dir: '', name: f.name, why: 'not flashed yet, would be flashed instead' });
         }
-        writeOnce('', card.rootFiles, fw, BASE + fw.file);
+        writeOnce('', card.rootFiles, fw, fw.url || BASE + fw.file);
         return acts;
+    }
+
+    // ---------- support site ----------
+    // On the ADDAC support site the panel's page has <meta name="addac-firmware-base" content="../">, and the
+    // .bin files come from the site's firmware sets for this access level instead of firmware/:
+    // <base>firmware/manifest.json for the granular firmware and <base><engine id in lower case>/manifest.json
+    // for each engine (schema 1: {channels: {release: [...], beta: [...], dev: [...]}}, newest first).
+    // `local` is firmware/firmware.json, which still gives the engines' labels and manuals and the banks.
+    // Returns the same shape as firmware.json, plus `versions`: every granular build the level may see,
+    // release first, so the page can offer betas to the levels that get them.
+    const SITE_CHANNELS = ['release', 'beta', 'dev'];
+    function fromSite(local, base, fwManifest, engineManifests) {
+        const entries = (m, set) => (m && m.channels ? SITE_CHANNELS.flatMap((ch) => (m.channels[ch] || []).map((e) => ({
+            file: e.file.split('/').pop(), url: `${base}${set}/${e.file}`, version: e.version, size: e.size, channel: ch, date: e.date,
+        }))) : []);
+        const versions = entries(fwManifest, 'firmware').map((e) => ({ ...e, id: local.firmware.id, label: local.firmware.label }));
+        if (!versions.length) throw new Error('the firmware list is empty');
+        const engines = [];
+        for (const le of local.engines) {
+            const e = entries(engineManifests[le.id], le.id.toLowerCase())[0];
+            if (e) engines.push({ ...e, id: le.id, label: le.label, manual: le.manual });
+        }
+        return { firmware: versions[0], versions, engines, banks: local.banks };
     }
 
     // ---------- File System Access API ----------
@@ -118,7 +141,7 @@
         onProgress(total, total, null);
     }
 
-    const api = { ENGINES, planInstall, readCard, runInstall, engineId, bankNumber, emptyCard, isBin };
+    const api = { ENGINES, planInstall, fromSite, readCard, runInstall, engineId, bankNumber, emptyCard, isBin };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.Install112 = api;
 })(typeof window !== 'undefined' ? window : globalThis);

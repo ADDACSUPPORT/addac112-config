@@ -4,7 +4,7 @@ const { SECTIONS, PRESET_SECTIONS, OPTION_SECTIONS, FIELDS, VOL_BITS, GAIN_MAX, 
 const { ScalesFile, SETS, NAME_MAX, formatRatio, parseRatio, cents } = window.Scales112;
 const { FolderSource, FilesSource, isBankName } = window.Source112;
 const HELP = window.Help112;
-const { planInstall, readCard, runInstall, emptyCard, bankNumber, ENGINES } = window.Install112;
+const { planInstall, fromSite, readCard, runInstall, emptyCard, bankNumber, ENGINES } = window.Install112;
 
 const MAX_PRESETS = 32; // MAX_PRESETS in defs.h
 const TABS = [
@@ -518,12 +518,23 @@ function showInstaller(on) {
 async function openInstaller() {
     showInstaller(true);
     if (!inst.manifest) {
+        const getJson = async (url) => {
+            const r = await fetch(url, { cache: 'no-cache' });
+            if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+            return r.json();
+        };
+        // on the support site, the .bin files come from the site's firmware sets (see fromSite in install.js)
+        const meta = document.querySelector('meta[name="addac-firmware-base"]');
+        const base = meta && meta.getAttribute('content');
         try {
-            const r = await fetch('firmware/firmware.json', { cache: 'no-cache' });
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            inst.manifest = await r.json();
+            const local = await getJson('firmware/firmware.json');
+            if (base) {
+                const engines = {};
+                for (const e of local.engines) engines[e.id] = await getJson(`${base}${e.id.toLowerCase()}/manifest.json`).catch(() => null);
+                inst.manifest = fromSite(local, base, await getJson(`${base}firmware/manifest.json`), engines);
+            } else inst.manifest = local;
         } catch (e) {
-            inst.error = `The list of firmware files couldn't be loaded (${e.message}). Open the panel from https://addacsupport.github.io/addac112-config/ and check the internet connection.`;
+            inst.error = `The list of firmware files couldn't be loaded (${e.message}). Check the internet connection and reload the page.`;
         }
     }
     renderInstaller();
@@ -550,6 +561,17 @@ function actionItems(acts) {
     return out;
 }
 
+// The version, or a choice of versions when the support site lists more than one (betas, on the levels that see them).
+function versionPicker(m) {
+    const fw = m.firmware;
+    if (!m.versions || m.versions.length < 2) return el('code', { text: fw.version });
+    const name = (v) => (v.channel && v.channel !== 'release' ? `${v.version} (${v.channel})` : v.version);
+    return el('select', {
+        disabled: inst.busy, 'aria-label': 'Firmware version',
+        onchange: (e) => { m.firmware = m.versions[e.target.selectedIndex]; inst.done = ''; renderInstaller(); },
+    }, m.versions.map((v) => el('option', { text: name(v), selected: v === fw })));
+}
+
 function renderInstaller() {
     const host = $('installer');
     host.textContent = '';
@@ -571,7 +593,7 @@ function renderInstaller() {
     const bank = m.banks[0];
     host.append(el('section', { class: 'card' },
         el('h2', null, 'Firmware'),
-        el('div', { class: 'row wide' }, el('div', null, el('b', { text: fw.label }), ' ', el('code', { text: fw.version }))),
+        el('div', { class: 'row wide' }, el('div', null, el('b', { text: fw.label }), ' ', versionPicker(m))),
         m.engines.length ? el('div', { class: 'row wide' },
             check(inst.engines, false, (e) => { inst.engines = e.target.checked; inst.done = ''; renderInstaller(); }, 'Also install the engines',
                 [`Copied to the ${ENGINES} folder of the card. Switch between them in Menu → ENGINE. The granular firmware is copied there too, so you can switch back to it.`,
